@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/hex"
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -32,31 +34,44 @@ func main() {
 			Name:  "ls",
 			Usage: "Retrieves hash from file data in provided folder",
 			Action: func(c *cli.Context) error {
-				folder := "dist"
-
-				files, err := ioutil.ReadDir(folder)
-				handleError(err)
-				for _, file := range files {
-					if file.IsDir() {
-						continue
-					}
-
-					fileName := file.Name()
+				folder := getFolder(c)
+				iterateByFolderFiles(folder, func(fileName string) {
 					bytes, err := ioutil.ReadFile(folder + "/" + fileName)
 					handleError(err)
 
 					hash := toKeccak(bytes)
 					log.Printf("%s %x", fileName, hash)
+				})
+				return nil
+			},
+		},
+		{
+			Name:  "get",
+			Usage: "Get data by hash in provided folder",
+			Action: func(c *cli.Context) error {
+				folder := getFolder(c)
+
+				hash := c.Args().Get(1)
+				if len(hash) != 64 {
+					handleError(errors.New("Invalid hash"))
 				}
+
+				iterateByFolderFiles(folder, func(fileName string) {
+					bytes, err := ioutil.ReadFile(folder + "/" + fileName)
+					handleError(err)
+
+					fileHash := hex.EncodeToString(toKeccak(bytes))
+					if fileHash == hash {
+						log.Printf("%s", string(bytes))
+					}
+				})
 				return nil
 			},
 		},
 	}
 
 	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
-	}
+	handleError(err)
 }
 
 func toKeccak(data []byte) []byte {
@@ -67,6 +82,25 @@ func toKeccak(data []byte) []byte {
 	hash = keccak.Sum(nil)
 
 	return hash
+}
+
+func getFolder(c *cli.Context) string {
+	folder := c.Args().First()
+	if folder == "" {
+		handleError(errors.New("Invalid folder"))
+	}
+	return folder
+}
+
+func iterateByFolderFiles(folder string, handler func(string)) {
+	files, err := ioutil.ReadDir(folder)
+	handleError(err)
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		handler(file.Name())
+	}
 }
 
 func handleError(err error) {
