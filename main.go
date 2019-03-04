@@ -1,4 +1,4 @@
-package byhash
+package main
 
 import (
 	"encoding/hex"

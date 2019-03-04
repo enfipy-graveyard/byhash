@@ -15,20 +15,15 @@ go get github.com/enfipy/byhash
 
 ## Usage:
 
-To lock by key:
+Result running `byhash ls dist/`:
 
-```
-locker := locker.Initialize()
-locker.Lock("key")
-<code>
-locker.Unlock("key")
+```bash
+f1.txt 47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad
+f2.txt bdda36034608af5b6b61c81585c67ad2458af25c62fc3f7be036c29de99739f4
 ```
 
-To lock only read:
+Result running `byhash get dist/ 47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad`:
 
-```
-locker := locker.Initialize()
-locker.RLock("key")
-<code>
-locker.RUnlock("key")
+```bash
+hello world
 ```
